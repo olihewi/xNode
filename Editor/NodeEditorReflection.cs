@@ -14,6 +14,7 @@ namespace XNodeEditor {
     public static class NodeEditorReflection {
         [NonSerialized] private static Dictionary<Type, Color> nodeTint;
         [NonSerialized] private static Dictionary<Type, int> nodeWidth;
+        [NonSerialized] private static Dictionary<Type, int> nodeHeight;
         [NonSerialized] private static Dictionary<Type, GUIContent> nodeHeader;
         /// <summary> All available node types </summary>
         public static Type[] nodeTypes { get { return _nodeTypes != null ? _nodeTypes : _nodeTypes = GetNodeTypes(); } }
@@ -46,6 +47,14 @@ namespace XNodeEditor {
                 CacheAttributes<int, XNode.Node.NodeWidthAttribute>(ref nodeWidth, x => x.width);
             }
             return nodeWidth.TryGetValue(nodeType, out width);
+        }
+
+        /// <summary> Get custom node heights defined with [NodeHeight(height)] </summary>
+        public static bool TryGetAttributeHeight(this Type nodeType, out int height) {
+            if (nodeHeight == null) {
+                CacheAttributes<int, XNode.Node.NodeHeightAttribute>(ref nodeHeight, x => x.height);
+            }
+            return nodeHeight.TryGetValue(nodeType, out height);
         }
 
         /// <summary> Get custom node headers defined with [NodeHeader] </summary>

@@ -397,6 +397,7 @@ namespace XNodeEditor {
             if (Event.current.type != EventType.Layout && currentActivity == NodeActivity.DragGrid) selectedReroutes = selection;
         }
 
+        private Rect lastRect;
         private void DrawNodes() {
             Event e = Event.current;
             if (e.type == EventType.Layout) {
@@ -490,6 +491,14 @@ namespace XNodeEditor {
                 //Draw node contents
                 nodeEditor.OnHeaderGUI();
                 nodeEditor.OnBodyGUI();
+
+                //Fill remaining vertical space
+                if (e.type == EventType.Repaint)
+                {
+                    lastRect = GUILayoutUtility.GetLastRect();
+                }
+                float remainingSpace = nodeEditor.GetMinHeight() - lastRect.yMax - 17;
+                if (remainingSpace > 0) GUILayout.Space(remainingSpace);
 
                 //If user changed a value, notify other scripts through onUpdateNode
                 if (EditorGUI.EndChangeCheck()) {

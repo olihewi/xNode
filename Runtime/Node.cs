@@ -389,6 +389,17 @@ namespace XNode {
             }
         }
 
+        /// <summary> Specify a minimum height for this node type </summary>
+        [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+        public class NodeHeightAttribute : Attribute {
+            public int height;
+            /// <summary> Specify a minimum height for this node type </summary>
+            /// <param name="height"> Minimum Height </param>
+            public NodeHeightAttribute(int height) {
+                this.height = height;
+            }
+        }
+
         /// <summary> Specify header GUIContent for this node type </summary>
         [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
         public class NodeHeaderAttribute : Attribute
