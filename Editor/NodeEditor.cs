@@ -25,8 +25,17 @@ namespace XNodeEditor {
         protected internal static bool inNodeEditor = false;
 #endif
 
-        public virtual void OnHeaderGUI() {
-            GUILayout.Label(target.name, NodeEditorResources.styles.nodeHeader, GUILayout.Height(30));
+        public virtual void OnHeaderGUI()
+        {
+            var content = new GUIContent(target.name);
+            var type = target.GetType();
+            if (type.TryGetAttributeHeader(out GUIContent attrContent))
+            {
+                if (content.text != NodeEditorUtilities.NodeDefaultName(type))
+                    attrContent.text = content.text;
+                content = attrContent;
+            }
+            GUILayout.Label(content, NodeEditorResources.styles.nodeHeader, GUILayout.Height(30));
         }
 
         /// <summary> Draws standard field editors for all public fields </summary>

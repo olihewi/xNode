@@ -14,6 +14,7 @@ namespace XNodeEditor {
     public static class NodeEditorReflection {
         [NonSerialized] private static Dictionary<Type, Color> nodeTint;
         [NonSerialized] private static Dictionary<Type, int> nodeWidth;
+        [NonSerialized] private static Dictionary<Type, GUIContent> nodeHeader;
         /// <summary> All available node types </summary>
         public static Type[] nodeTypes { get { return _nodeTypes != null ? _nodeTypes : _nodeTypes = GetNodeTypes(); } }
 
@@ -45,6 +46,14 @@ namespace XNodeEditor {
                 CacheAttributes<int, XNode.Node.NodeWidthAttribute>(ref nodeWidth, x => x.width);
             }
             return nodeWidth.TryGetValue(nodeType, out width);
+        }
+
+        /// <summary> Get custom node headers defined with [NodeHeader] </summary>
+        public static bool TryGetAttributeHeader(this Type nodeType, out GUIContent content)
+        {
+            if (nodeHeader == null)
+                CacheAttributes<GUIContent, XNode.Node.NodeHeaderAttribute>(ref nodeHeader, x => x.content);
+            return nodeHeader.TryGetValue(nodeType, out content);
         }
 
         private static void CacheAttributes<V, A>(ref Dictionary<Type, V> dict, Func<A, V> getter) where A : Attribute {

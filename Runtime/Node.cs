@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace XNode {
@@ -387,6 +388,16 @@ namespace XNode {
                 this.width = width;
             }
         }
+
+        /// <summary> Specify header GUIContent for this node type </summary>
+        [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+        public class NodeHeaderAttribute : Attribute
+        {
+            public GUIContent content;
+
+            public NodeHeaderAttribute(string name) => content = new GUIContent(name);
+            public NodeHeaderAttribute(string name, string iconPath) => content = new GUIContent(EditorGUIUtility.IconContent(iconPath)) {text = name};
+        }
 #endregion
 
         [Serializable] private class NodePortDictionary : Dictionary<string, NodePort>, ISerializationCallbackReceiver {
@@ -406,7 +417,7 @@ namespace XNode {
 
             public void OnAfterDeserialize() {
                 this.Clear();
-#if UNITY_2021_3_OR_NEWER                
+#if UNITY_2021_3_OR_NEWER
                 this.EnsureCapacity(keys.Count);
 #endif
 
