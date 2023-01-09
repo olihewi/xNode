@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace XNode.Flow
 {
+    [Serializable]
     public abstract class FlowNode : Node
     {
         public override object GetValue(NodePort port)
@@ -24,6 +25,7 @@ namespace XNode.Flow
         public FlowNode GetFlowNode(string portName) => GetValue(GetPort(portName)) as FlowNode;
     }
 
+    [Serializable]
     public abstract class InFlowNode : FlowNode
     {
         [Input(ShowBackingValue.Never, ConnectionType.Multiple, TypeConstraint.Inherited)]
@@ -36,6 +38,7 @@ namespace XNode.Flow
         }
     }
 
+    [Serializable]
     public abstract class OutFlowNode : FlowNode
     {
         [Output(ShowBackingValue.Never, ConnectionType.Multiple, TypeConstraint.Inherited)]
@@ -48,6 +51,7 @@ namespace XNode.Flow
         }
     }
 
+    [Serializable]
     public abstract class InOutFlowNode : FlowNode
     {
         [Input(ShowBackingValue.Never, ConnectionType.Multiple, TypeConstraint.Inherited)]

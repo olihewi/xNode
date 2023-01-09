@@ -41,12 +41,10 @@ namespace XNodeEditor {
 
         /// <summary> Returns context node menu path. Null or empty strings for hidden nodes. </summary>
         public virtual string GetNodeMenuName(Type type) {
-            //Check if type has the CreateNodeMenuAttribute
             XNode.Node.CreateNodeMenuAttribute attrib;
-            if (NodeEditorUtilities.GetAttrib(type, out attrib)) // Return custom path
-                return attrib.menuName;
-            else // Return generated path
-                return NodeEditorUtilities.NodeDefaultPath(type);
+            string name = NodeEditorUtilities.GetAttrib(type, out attrib) ? attrib.menuName : NodeEditorUtilities.NodeDefaultPath(type);
+            name = name.Replace("X Node/", "");
+            return name;
         }
 
         /// <summary> The order by which the menu items are displayed. </summary>
@@ -184,7 +182,7 @@ namespace XNodeEditor {
         /// <summary> The returned color is used to color the background of the door.
         /// Usually used for outer edge effect </summary>
         public virtual Color GetPortBackgroundColor(XNode.NodePort port) {
-            return Color.gray;
+            return Color.white;
         }
 
         /// <summary> Returns generated color for a type. This color is editable in preferences </summary>
