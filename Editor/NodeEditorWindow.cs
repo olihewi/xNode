@@ -81,10 +81,10 @@ namespace XNodeEditor {
                 graphEditor.OnWindowFocus();
                 if (NodeEditorPreferences.GetSettings().autoSave) AssetDatabase.SaveAssets();
             }
-            
+
             dragThreshold = Math.Max(1f, Screen.width / 1000f);
         }
-        
+
         void OnLostFocus() {
             if (graphEditor != null) graphEditor.OnWindowFocusLost();
         }
@@ -199,7 +199,16 @@ namespace XNodeEditor {
         public static NodeEditorWindow Open(XNode.NodeGraph graph) {
             if (!graph) return null;
 
-            NodeEditorWindow w = GetWindow(typeof(NodeEditorWindow), false, "xNode", true) as NodeEditorWindow;
+            var nodeEditorWindows = Resources.FindObjectsOfTypeAll<NodeEditorWindow>();
+            foreach (var window in nodeEditorWindows)
+            {
+                if (window.graph != graph) continue;
+                window.Focus();
+                return window;
+            }
+
+            NodeEditorWindow w = CreateWindow<NodeEditorWindow>(graph.name, typeof(SceneView));
+            w.titleContent.image = Resources.Load<Texture2D>(EditorGUIUtility.isProSkin ? "d_xnode_icon" : "xnode_icon");
             w.wantsMouseMove = true;
             w.graph = graph;
             return w;
