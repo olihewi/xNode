@@ -146,12 +146,9 @@ namespace XNodeEditor {
                             selectionBox = new Rect(boxStartPos, boxSize);
                             Repaint();
                         }
-                    } else if (e.button == 1 || e.button == 2) {
-                        //check drag threshold for larger screens
-                        if (e.delta.magnitude > dragThreshold) {
-                            panOffset += e.delta * zoom;
-                            isPanning = true;
-                        }
+                    } else if (e.button == 2) {
+                        panOffset += e.delta * zoom;
+                        isPanning = true;
                     }
                     break;
                 case EventType.MouseDown:
@@ -277,7 +274,7 @@ namespace XNodeEditor {
 
                         Repaint();
                         currentActivity = NodeActivity.Idle;
-                    } else if (e.button == 1 || e.button == 2) {
+                    } else if (e.button == 1) {
                         if (!isPanning) {
                             if (IsDraggingPort) {
                                 draggedOutputReroutes.Add(WindowToGridPosition(e.mousePosition));
