@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using XNode;
 using XNodeEditor.Internal;
 #if UNITY_2019_1_OR_NEWER && USE_ADVANCED_GENERIC_MENU
 using GenericMenu = XNodeEditor.AdvancedGenericMenu;
@@ -106,15 +107,17 @@ namespace XNodeEditor {
 
         /// <summary> Show right-click context menu for hovered reroute </summary>
         void ShowRerouteContextMenu(RerouteReference reroute) {
-            GenericMenu contextMenu = new GenericMenu();
-            contextMenu.AddItem(new GUIContent("Remove"), false, () => reroute.RemovePoint());
-            contextMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+            reroute.RemovePoint();
+            //GenericMenu contextMenu = new GenericMenu();
+            //contextMenu.AddItem(new GUIContent("Remove"), false, () => reroute.RemovePoint());
+            //contextMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
             if (NodeEditorPreferences.GetSettings().autoSave) AssetDatabase.SaveAssets();
         }
 
         /// <summary> Show right-click context menu for hovered port </summary>
         void ShowPortContextMenu(XNode.NodePort hoveredPort) {
-            GenericMenu contextMenu = new GenericMenu();
+            hoveredPort.ClearConnections();
+            /*GenericMenu contextMenu = new GenericMenu();
             foreach (var port in hoveredPort.GetConnections()) {
                 var name = port.node.name;
                 var index = hoveredPort.GetConnectionIndex(port);
@@ -130,7 +133,7 @@ namespace XNodeEditor {
                 else
                     graphEditor.AddContextMenuItems(contextMenu, hoveredPort.ValueType, XNode.NodePort.IO.Input);
             }
-            contextMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+            contextMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));*/
             if (NodeEditorPreferences.GetSettings().autoSave) AssetDatabase.SaveAssets();
         }
 
@@ -533,7 +536,8 @@ namespace XNodeEditor {
 
                     //If dragging a selection box, add nodes inside to selection
                     if (currentActivity == NodeActivity.DragGrid) {
-                        if (windowRect.Overlaps(selectionBox)) preSelection.Add(node);
+                        if (node is XNode.GroupNode ? selectionBox.Overlaps(new Rect(windowRect) {height = 32} )
+                            : windowRect.Overlaps(selectionBox)) preSelection.Add(node);
                     }
 
                     //Check if we are hovering any of this nodes ports

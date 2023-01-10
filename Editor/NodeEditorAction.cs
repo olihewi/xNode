@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using XNode;
 using XNodeEditor.Internal;
 #if UNITY_2019_1_OR_NEWER && USE_ADVANCED_GENERIC_MENU
 using GenericMenu = XNodeEditor.AdvancedGenericMenu;
@@ -148,7 +149,6 @@ namespace XNodeEditor {
                         }
                     } else if (e.button == 2) {
                         panOffset += e.delta * zoom;
-                        isPanning = true;
                     }
                     break;
                 case EventType.MouseDown:
@@ -204,7 +204,7 @@ namespace XNodeEditor {
                             currentActivity = NodeActivity.HoldNode;
                         }
                         // If mousedown on grid background, deselect all
-                        else if (!IsHoveringNode) {
+                        else if (!IsHoveringNode || hoveredNode is XNode.GroupNode) {
                             currentActivity = NodeActivity.HoldGrid;
                             if (!e.control && !e.shift) {
                                 selectedReroutes.Clear();
@@ -212,6 +212,7 @@ namespace XNodeEditor {
                             }
                         }
                     }
+                    else if (e.button == 2) isPanning = true;
                     break;
                 case EventType.MouseUp:
                     if (e.button == 0) {
@@ -245,7 +246,7 @@ namespace XNodeEditor {
                             IEnumerable<XNode.Node> nodes = Selection.objects.Where(x => x is XNode.Node).Select(x => x as XNode.Node);
                             foreach (XNode.Node node in nodes) EditorUtility.SetDirty(node);
                             if (NodeEditorPreferences.GetSettings().autoSave) AssetDatabase.SaveAssets();
-                        } else if (!IsHoveringNode) {
+                        } else if (!IsHoveringNode || hoveredNode is XNode.GroupNode) {
                             // If click outside node, release field focus
                             if (!isPanning) {
                                 EditorGUI.FocusTextInControl(null);
@@ -260,10 +261,7 @@ namespace XNodeEditor {
                             SelectNode(hoveredNode, false);
 
                             // Double click to center node
-                            if (isDoubleClick) {
-                                Vector2 nodeDimension = nodeSizes.ContainsKey(hoveredNode) ? nodeSizes[hoveredNode] / 2 : Vector2.zero;
-                                panOffset = -hoveredNode.position - nodeDimension;
-                            }
+                            if (isDoubleClick) RenameSelectedNode();
                         }
 
                         // If click reroute, select it.
@@ -276,7 +274,9 @@ namespace XNodeEditor {
                         currentActivity = NodeActivity.Idle;
                     } else if (e.button == 1) {
                         if (!isPanning) {
-                            if (IsDraggingPort) {
+                            if (currentActivity == NodeActivity.DragNode && Selection.activeObject is Node)
+                                ToggleSelectionGroup();
+                            else if (IsDraggingPort) {
                                 draggedOutputReroutes.Add(WindowToGridPosition(e.mousePosition));
                             } else if (currentActivity == NodeActivity.DragNode && Selection.activeObject == null && selectedReroutes.Count == 1) {
                                 selectedReroutes[0].InsertPoint(selectedReroutes[0].GetPoint());
@@ -292,7 +292,7 @@ namespace XNodeEditor {
                                 NodeEditor.GetEditor(hoveredNode, this).AddContextMenuItems(menu);
                                 menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                                 e.Use(); // Fixes copy/paste context menu appearing in Unity 5.6.6f2 - doesn't occur in 2018.3.2f1 Probably needs to be used in other places.
-                            } else if (!IsHoveringNode) {
+                            } else if (!IsHoveringNode || hoveredNode is GroupNode) {
                                 autoConnectOutput = null;
                                 GenericMenu menu = new GenericMenu();
                                 graphEditor.AddContextMenuItems(menu);
@@ -300,6 +300,11 @@ namespace XNodeEditor {
                             }
                         }
                         isPanning = false;
+                    }
+                    else if (e.button == 2)
+                    {
+                        isPanning = false;
+                        Repaint();
                     }
                     // Reset DoubleClick
                     isDoubleClick = false;
@@ -348,6 +353,12 @@ namespace XNodeEditor {
                         }
                     }
                     Repaint();
+                    break;
+                case EventType.Repaint:
+                    if (currentActivity == NodeActivity.DragNode)
+                        EditorGUIUtility.AddCursorRect(new Rect(0,0,10000,10000), MouseCursor.MoveArrow);
+                    else if (isPanning)
+                        EditorGUIUtility.AddCursorRect(new Rect(0,0,10000,10000), MouseCursor.Pan);
                     break;
                 case EventType.Ignore:
                     // If release mouse outside window
@@ -415,6 +426,44 @@ namespace XNodeEditor {
                     RenamePopup.Show(Selection.activeObject);
                 }
             }
+        }
+
+        public void ToggleSelectionGroup()
+        {
+            var nodes = Selection.objects.OfType<Node>().ToArray();
+            var allGroups = graph.nodes.OfType<XNode.GroupNode>().ToArray();
+            var groups = allGroups.Where(group => !Selection.objects.Contains(group)).ToArray();
+            bool anyGrouped = false;
+            foreach (var group in groups)
+            {
+                foreach (var node in nodes)
+                {
+                    if (group.children.Contains(node))
+                    {
+                        group.children.Remove(node);
+                        anyGrouped = true;
+                    }
+                }
+            }
+
+            if (!anyGrouped)
+            {
+                nodes = nodes.Where(node => !allGroups.Any(group => group.children.Contains(node))).ToArray();
+                foreach (var group in groups.Reverse())
+                {
+                    var editor = NodeEditor.GetEditor(group, this);
+                    editor.target = group;
+                    var rect = new Rect(group.position.x, group.position.y, editor.GetWidth(), editor.GetMinHeight());
+
+                    if (rect.Contains(WindowToGridPosition(Event.current.mousePosition)))
+                    {
+                        group.children.AddRange(nodes);
+                        break;
+                    }
+                }
+            }
+
+            Repaint();
         }
 
         /// <summary> Draw this node on top of other nodes by placing it last in the graph.nodes list </summary>
