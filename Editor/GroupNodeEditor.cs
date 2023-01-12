@@ -19,7 +19,7 @@ namespace XNodeEditor
             if (target is XNode.GroupNode node)
             {
                 bool selectChildren = NodeEditorWindow.currentActivity is NodeEditorWindow.NodeActivity.HoldNode or NodeEditorWindow.NodeActivity.DragNode;
-                if (!_selected && Selection.activeObject == target && selectChildren)
+                if (!_selected && selectChildren && Selection.objects.Contains(target))
                 {
                     _selected = true;
                     var selection = Selection.objects.ToList();
@@ -81,6 +81,7 @@ namespace XNodeEditor
                 node.children.Min(x => x.position.x) - padding.x,
                 node.children.Min(x => x.position.y) - padding.y
                 );
+            Debug.Log(GetSize(node.children.FirstOrDefault()));
             GUILayout.Label("");
         }
 
@@ -96,50 +97,37 @@ namespace XNodeEditor
         public override int GetWidth()
         {
             int min = base.GetWidth();
-            var node = target as XNode.GroupNode;
-            if (node == null || node.children == null || node.children.Count == 0) return min + (int)padding.x + (int)padding.z;
+            var group = target as XNode.GroupNode;
+            if (group == null || group.children == null || group.children.Count == 0) return min + (int)padding.x + (int)padding.z;
             return Mathf.Max(min,
-                             node.children.Max(x =>
-                                                   GetEditor(x, window).GetWidth() + (int)x.position.x) - (int)target.position.x)
+                             group.children.Max(x =>
+                                                   GetSize(x).x + (int)x.position.x) - (int)target.position.x)
                  + (int)padding.z;
         }
 
-        public override int GetMinHeight()
+        public override int GetHeight()
         {
-            int min = base.GetMinHeight();
-            var node = target as XNode.GroupNode;
-            if (node == null || node.children == null || node.children.Count == 0) return min + (int)padding.y + (int)padding.w;
+            int min = base.GetHeight();
+            var group = target as XNode.GroupNode;
+            if (group == null || group.children == null || group.children.Count == 0) return min + (int)padding.y + (int)padding.w;
             return Mathf.Max(min,
-                             node.children.Max(x => GetEditor(x, window).GetMinHeight() + (int) x.position.y - (int) target.position.y))
+                             group.children.Max(x =>
+                                                   GetSize(x).y + (int) x.position.y) - (int)target.position.y)
                  + (int) padding.w;
         }
 
+        public Vector2Int GetSize(Node node) => Vector2Int.RoundToInt(window.nodeSizes.TryGetValue(node, out var size) ? size : new Vector2(0,0));
 
-        private static int GetNodeWidth(Node node)
-        {
-            Type type = node.GetType();
-            return (type.TryGetAttributeWidth(out int width) ? width : 208);
-        }
-
-        private static int GetNodeHeight(Node node)
-        {
-            Type type = node.GetType();
-            return (type.TryGetAttributeHeight(out int height) ? height : 100);
-        }
-
-
-        private static Texture2D nodeGroupBody { get { return _nodeGroupBody != null ? _nodeGroupBody : _nodeGroupBody = Resources.Load<Texture2D>("xnode_group"); } }
+        private static Texture2D nodeGroupBody => _nodeGroupBody != null ? _nodeGroupBody : _nodeGroupBody = Resources.Load<Texture2D>("xnode_group");
         private static Texture2D _nodeGroupBody;
-        public override GUIStyle GetBodyStyle()
+        private static GUIStyle guiStyle;
+
+        public override GUIStyle GetBodyStyle() => guiStyle ??= new GUIStyle(base.GetBodyStyle())
         {
-            var style = new GUIStyle(base.GetBodyStyle())
+            normal =
             {
-                normal =
-                {
-                    background = nodeGroupBody
-                }
-            };
-            return style;
-        }
+                background = nodeGroupBody
+            }
+        };
     }
 }

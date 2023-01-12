@@ -293,8 +293,8 @@ namespace XNodeEditor {
                     Vector2 start = gridPoints[0];
                     Vector2 end = gridPoints[length - 1];
                     //Modify first and last point in array so we can loop trough them nicely.
-                    gridPoints[0] = gridPoints[0] + Vector2.right * (20 / zoom);
-                    gridPoints[length - 1] = gridPoints[length - 1] + Vector2.left * (20 / zoom);
+                    gridPoints[0] = gridPoints[0] + Vector2.right * (16 / zoom);
+                    gridPoints[length - 1] = gridPoints[length - 1] + Vector2.left * (16 / zoom);
                     //Draw first vertical lines going out from nodes
                     Handles.color = gradient.Evaluate(0f);
                     DrawAAPolyLineNonAlloc(thickness, start, gridPoints[0]);
@@ -488,6 +488,8 @@ namespace XNodeEditor {
                     GUILayout.BeginVertical(style);
                 }
 
+                GUILayout.BeginVertical();
+
                 GUI.color = guiColor;
                 EditorGUI.BeginChangeCheck();
 
@@ -495,19 +497,25 @@ namespace XNodeEditor {
                 nodeEditor.OnHeaderGUI();
                 nodeEditor.OnBodyGUI();
 
-                //Fill remaining vertical space
-                if (e.type == EventType.Repaint)
-                {
-                    lastRect = GUILayoutUtility.GetLastRect();
-                }
-                float remainingSpace = nodeEditor.GetMinHeight() - lastRect.yMax - 17;
-                if (remainingSpace > 0) GUILayout.Space(remainingSpace);
-
                 //If user changed a value, notify other scripts through onUpdateNode
                 if (EditorGUI.EndChangeCheck()) {
                     if (NodeEditor.onUpdateNode != null) NodeEditor.onUpdateNode(node);
                     EditorUtility.SetDirty(node);
                     nodeEditor.serializedObject.ApplyModifiedProperties();
+                }
+
+                GUILayout.EndVertical();
+
+                // Fill remaining space
+                var height = nodeEditor.GetHeight();
+                if (height > 0)
+                {
+                    if (e.type == EventType.Repaint)
+                    {
+                        lastRect = GUILayoutUtility.GetLastRect();
+                    }
+                    float remainingSpace = height - lastRect.yMax - 17;
+                    GUILayout.Space(Mathf.Max(0,remainingSpace));
                 }
 
                 GUILayout.EndVertical();

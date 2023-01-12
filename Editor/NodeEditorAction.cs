@@ -453,7 +453,7 @@ namespace XNodeEditor {
                 {
                     var editor = NodeEditor.GetEditor(group, this);
                     editor.target = group;
-                    var rect = new Rect(group.position.x, group.position.y, editor.GetWidth(), editor.GetMinHeight());
+                    var rect = new Rect(group.position.x, group.position.y, editor.GetWidth(), editor.GetHeight());
 
                     if (rect.Contains(WindowToGridPosition(Event.current.mousePosition)))
                     {

@@ -120,10 +120,10 @@ namespace XNodeEditor {
             else return 208;
         }
 
-        public virtual int GetMinHeight()
+        public virtual int GetHeight()
         {
             Type type = target.GetType();
-            return type.TryGetAttributeHeight(out int height) ? height : 80;
+            return type.TryGetAttributeHeight(out int height) ? height : 0;
         }
 
         /// <summary> Returns color for target node </summary>
