@@ -4,6 +4,7 @@ using UnityEngine;
 using XNode;
 using System.Linq;
 using UnityEditor;
+using XNodeEditor.Internal;
 
 namespace XNodeEditor
 {
@@ -13,6 +14,7 @@ namespace XNodeEditor
         private static Vector4 padding = new Vector4(32, 48, 32, 32);
         private bool _selected = false;
         private UnityEngine.Object[] lastSelection;
+        private List<RerouteReference> lastSelectionReroutes;
 
         public override void OnHeaderGUI()
         {
@@ -24,7 +26,8 @@ namespace XNodeEditor
                     _selected = true;
                     var selection = Selection.objects.ToList();
                     lastSelection = selection.ToArray();
-                    GetChildren(node, ref selection);
+                    lastSelectionReroutes = new List<RerouteReference>(window.selectedReroutes);
+                    SelectChildren(node, ref selection);
                     //selection.AddRange(GetChildren(node));
                     Selection.objects = selection.Distinct().ToArray();
                     NodeEditorWindow.current.Repaint();
@@ -33,18 +36,40 @@ namespace XNodeEditor
                 {
                     _selected = false;
                     Selection.objects = lastSelection;
+                    window.selectedReroutes = lastSelectionReroutes;
                 }
             }
             base.OnHeaderGUI();
         }
 
-        private void GetChildren(XNode.GroupNode group, ref List<UnityEngine.Object> list)
+        private void SelectChildren(XNode.GroupNode group, ref List<UnityEngine.Object> selectionList)
         {
+            var groupRect = new Rect(group.position, new Vector2(GetWidth(), GetHeight()));
             foreach (var child in group.children)
             {
-                if (list.Contains(child)) continue;
-                list.Add(child);
-                if (child is XNode.GroupNode _group) GetChildren(_group, ref list);
+                if (selectionList.Contains(child)) continue;
+                selectionList.Add(child);
+                var pc = child.Ports.Count();
+                for (int p = 0; p < pc; p++)
+                {
+                    var port = child.Ports.ElementAt(p);
+                    for (int i = 0; i < port.ConnectionCount; i++)
+                    {
+                        var connectionIndex = i;
+                        if (port.direction == NodePort.IO.Input)
+                        {
+                            var newPort = port.GetConnection(i);
+                            connectionIndex = newPort.GetConnectionIndex(port);
+                            port = newPort;
+                        }
+                        var reroutes = port.GetReroutePoints(connectionIndex);
+                        for (int j = 0; j < reroutes.Count; j++)
+                        {
+                            if (groupRect.Contains(reroutes[j])) window.selectedReroutes.Add(new RerouteReference(port, connectionIndex, j));
+                        }
+                    }
+                }
+                if (child is XNode.GroupNode _group) SelectChildren(_group, ref selectionList);
             }
         }
 
@@ -81,8 +106,7 @@ namespace XNodeEditor
                 node.children.Min(x => x.position.x) - padding.x,
                 node.children.Min(x => x.position.y) - padding.y
                 );
-            Debug.Log(GetSize(node.children.FirstOrDefault()));
-            GUILayout.Label("");
+            GUILayout.Label(GUIContent.none);
         }
 
         public override Color GetTint()

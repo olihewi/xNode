@@ -514,7 +514,7 @@ namespace XNodeEditor {
                     {
                         lastRect = GUILayoutUtility.GetLastRect();
                     }
-                    float remainingSpace = height - lastRect.yMax - 17;
+                    float remainingSpace = height - lastRect.height - EditorGUIUtility.singleLineHeight;
                     GUILayout.Space(Mathf.Max(0,remainingSpace));
                 }
 
