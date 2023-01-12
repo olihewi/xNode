@@ -78,6 +78,11 @@ namespace XNodeEditor
             var e = Event.current;
             var node = target as XNode.GroupNode;
 
+            for (int i = node.children.Count - 1; i >= 0; i--)
+            {
+                if (node.children[i] == null) node.children.RemoveAt(i);
+            }
+
             var nodes = node.graph.nodes;
             if (e.type == EventType.Repaint)
             {

@@ -34,6 +34,7 @@ namespace XNodeEditor {
             DrawNodes();
             DrawSelectionBox();
             DrawTooltip();
+            RenameGUI();
             graphEditor.OnGUI();
 
             // Run and reset onLateGUI

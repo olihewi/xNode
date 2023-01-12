@@ -31,11 +31,9 @@ namespace XNodeEditor {
         {
             var content = new GUIContent(target.name);
             var type = target.GetType();
-            if (type.TryGetAttributeHeader(out GUIContent attrContent))
+            if (type.TryGetAttributeHeader(out GUIContent attrContent) && content.text == NodeEditorUtilities.NodeDefaultName(type))
             {
-                if (content.text != NodeEditorUtilities.NodeDefaultName(type))
-                    attrContent.text = content.text;
-                content = attrContent;
+                content = new GUIContent(attrContent);
             }
             GUILayout.Label(content, NodeEditorResources.styles.nodeHeader, GUILayout.Height(30));
         }

@@ -415,16 +415,61 @@ namespace XNodeEditor {
             }
         }
 
+        public Node currentRenamingNode
+        {
+            get => _currentRename;
+            set
+            {
+                if (_currentRename == value) return;
+                _currentRename = value;
+                if (value != null)
+                {
+                    _currentRenameString = value.name;
+                }
+            }
+        }
+        private Node _currentRename;
+        private const string renameControlName = "renameNodeInput";
+        private string _currentRenameString;
+
+        private void RenameGUI()
+        {
+            var node = currentRenamingNode;
+            if (node == null) return;
+            GUI.SetNextControlName(renameControlName);
+            var rect = GridToWindowRectNoClipped(
+                new Rect(node.position + new Vector2(16,9),
+                         (nodeSizes.TryGetValue(node, out var size) ? size : new Vector2(180, EditorGUIUtility.singleLineHeight))
+                    - new Vector2(32, 18)
+                ) {height = EditorGUIUtility.singleLineHeight});
+            _currentRenameString = GUI.TextField(rect, _currentRenameString);
+            EditorGUI.FocusTextInControl(renameControlName);
+            var e = Event.current;
+            if ((e.isKey && (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.Escape)) ||
+                (e.isMouse && e.type == EventType.MouseDown && !rect.Contains(e.mousePosition)))
+            {
+                var newName = (e.keyCode == KeyCode.Escape || _currentRenameString == null || _currentRenameString.Trim() == "") ?
+                                  NodeEditorUtilities.NodeDefaultName(node.GetType()) :
+                                  _currentRenameString;
+
+                node.name = newName;
+                NodeEditor.GetEditor(node, this).OnRename();
+
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(node))) {
+                    AssetDatabase.SetMainObject((node).graph, AssetDatabase.GetAssetPath(node));
+                    AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(node));
+                }
+                currentRenamingNode = null;
+                EditorGUIUtility.editingTextField = false;
+                node.TriggerOnValidate();
+            }
+        }
         /// <summary> Initiate a rename on the currently selected node </summary>
         public void RenameSelectedNode() {
-            if (Selection.objects.Length == 1 && Selection.activeObject is XNode.Node) {
+            if (Selection.objects.Length == 1 && Selection.activeObject is XNode.Node)
+            {
                 XNode.Node node = Selection.activeObject as XNode.Node;
-                Vector2 size;
-                if (nodeSizes.TryGetValue(node, out size)) {
-                    RenamePopup.Show(Selection.activeObject, size.x);
-                } else {
-                    RenamePopup.Show(Selection.activeObject);
-                }
+                currentRenamingNode = node;
             }
         }
 
