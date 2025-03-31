@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -13,8 +13,8 @@ namespace XNodeEditor {
     /// <summary> Contains GUI methods </summary>
     public partial class NodeEditorWindow {
         public NodeGraphEditor graphEditor;
-        private List<UnityEngine.Object> selectionCache;
-        private List<XNode.Node> culledNodes;
+        private readonly HashSet<UnityEngine.Object> selectionCache = new();
+        private readonly HashSet<XNode.Node> culledNodes = new();
         /// <summary> 19 if docked, 22 if not </summary>
         private int topPadding { get { return isDocked() ? 19 : 22; } }
         /// <summary> Executed after all other window GUI. Useful if Zoom is ruining your day. Automatically resets after being run.</summary>
@@ -404,8 +404,13 @@ namespace XNodeEditor {
         private Rect lastRect;
         private void DrawNodes() {
             Event e = Event.current;
+
             if (e.type == EventType.Layout) {
-                selectionCache = new List<UnityEngine.Object>(Selection.objects);
+                selectionCache.Clear();
+                var objs = Selection.objects;
+                selectionCache.EnsureCapacity(objs.Length);
+                foreach (var obj in objs)
+                    selectionCache.Add(obj);
             }
 
             System.Reflection.MethodInfo onValidate = null;
@@ -437,7 +442,7 @@ namespace XNodeEditor {
 
             List<XNode.NodePort> removeEntries = new List<XNode.NodePort>();
 
-            if (e.type == EventType.Layout) culledNodes = new List<XNode.Node>();
+            if (e.type == EventType.Layout) culledNodes.Clear();
             for (int n = 0; n < graph.nodes.Count; n++) {
                 // Skip null nodes. The user could be in the process of renaming scripts, so removing them at this point is not advisable.
                 if (graph.nodes[n] == null) continue;
