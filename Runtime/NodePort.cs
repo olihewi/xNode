@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using XNode.Flow;
 
 namespace XNode {
     [Serializable]
@@ -19,7 +20,7 @@ namespace XNode {
             }
         }
 
-        public IO direction { 
+        public IO direction {
             get { return _direction; }
             internal set { _direction = value; }
         }
@@ -121,22 +122,22 @@ namespace XNode {
 
         /// <summary> Return the output value of this node through its parent nodes GetValue override method. </summary>
         /// <returns> <see cref="Node.GetValue(NodePort)"/> </returns>
-        public object GetOutputValue() {
+        public object GetOutputValue(FlowContext ctx = null) {
             if (direction == IO.Input) return null;
-            return node.GetValue(this);
+            return node.GetValue(this, ctx);
         }
 
         /// <summary> Return the output value of the first connected port. Returns null if none found or invalid.</summary>
         /// <returns> <see cref="NodePort.GetOutputValue"/> </returns>
-        public object GetInputValue() {
+        public object GetInputValue(FlowContext ctx = null) {
             NodePort connectedPort = Connection;
             if (connectedPort == null) return null;
-            return connectedPort.GetOutputValue();
+            return connectedPort.GetOutputValue(ctx);
         }
 
         /// <summary> Return the output values of all connected ports. </summary>
         /// <returns> <see cref="NodePort.GetOutputValue"/> </returns>
-        public object[] GetInputValues() {
+        public object[] GetInputValues(FlowContext ctx = null) {
             object[] objs = new object[ConnectionCount];
             for (int i = 0; i < ConnectionCount; i++) {
                 NodePort connectedPort = connections[i].Port;
@@ -145,22 +146,22 @@ namespace XNode {
                     i--;
                     continue;
                 }
-                objs[i] = connectedPort.GetOutputValue();
+                objs[i] = connectedPort.GetOutputValue(ctx);
             }
             return objs;
         }
 
         /// <summary> Return the output value of the first connected port. Returns null if none found or invalid. </summary>
         /// <returns> <see cref="NodePort.GetOutputValue"/> </returns>
-        public T GetInputValue<T>() {
-            object obj = GetInputValue();
+        public T GetInputValue<T>(FlowContext ctx = null) {
+            object obj = GetInputValue(ctx);
             return obj is T ? (T) obj : default(T);
         }
 
         /// <summary> Return the output values of all connected ports. </summary>
         /// <returns> <see cref="NodePort.GetOutputValue"/> </returns>
-        public T[] GetInputValues<T>() {
-            object[] objs = GetInputValues();
+        public T[] GetInputValues<T>(FlowContext ctx = null) {
+            object[] objs = GetInputValues(ctx);
             T[] ts = new T[objs.Length];
             for (int i = 0; i < objs.Length; i++) {
                 if (objs[i] is T) ts[i] = (T) objs[i];
@@ -179,30 +180,6 @@ namespace XNode {
                 value = default(T);
                 return false;
             }
-        }
-
-        /// <summary> Return the sum of all inputs. </summary>
-        /// <returns> <see cref="NodePort.GetOutputValue"/> </returns>
-        public float GetInputSum(float fallback) {
-            object[] objs = GetInputValues();
-            if (objs.Length == 0) return fallback;
-            float result = 0;
-            for (int i = 0; i < objs.Length; i++) {
-                if (objs[i] is float) result += (float) objs[i];
-            }
-            return result;
-        }
-
-        /// <summary> Return the sum of all inputs. </summary>
-        /// <returns> <see cref="NodePort.GetOutputValue"/> </returns>
-        public int GetInputSum(int fallback) {
-            object[] objs = GetInputValues();
-            if (objs.Length == 0) return fallback;
-            int result = 0;
-            for (int i = 0; i < objs.Length; i++) {
-                if (objs[i] is int) result += (int) objs[i];
-            }
-            return result;
         }
 
         /// <summary> Connect this <see cref="NodePort"/> to another </summary>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using XNode.Flow;
 
 namespace XNode {
     /// <summary>
@@ -172,18 +173,18 @@ namespace XNode {
         }
 
         /// <summary> Remove an dynamic port from the node </summary>
-        public void RemoveDynamicPort(string fieldName) {
+        public bool RemoveDynamicPort(string fieldName) {
             NodePort dynamicPort = GetPort(fieldName);
-            if (dynamicPort == null) throw new ArgumentException("port " + fieldName + " doesn't exist");
-            RemoveDynamicPort(GetPort(fieldName));
+            if (dynamicPort == null) return false;
+            return RemoveDynamicPort(GetPort(fieldName));
         }
 
         /// <summary> Remove an dynamic port from the node </summary>
-        public void RemoveDynamicPort(NodePort port) {
-            if (port == null) throw new ArgumentNullException("port");
-            else if (port.IsStatic) throw new ArgumentException("cannot remove static port");
+        public bool RemoveDynamicPort(NodePort port)
+        {
+            if (port == null || port.IsStatic) return false;
             port.ClearConnections();
-            ports.Remove(port.fieldName);
+            return ports.Remove(port.fieldName);
         }
 
         /// <summary> Removes all dynamic ports from the node </summary>
@@ -224,10 +225,12 @@ namespace XNode {
 #endregion
 
 #region Inputs/Outputs
-        /// <summary> Return input value for a specified port. Returns fallback value if no ports are connected </summary>
-        /// <param name="fieldName">Field name of requested input port</param>
-        /// <param name="fallback">If no ports are connected, this value will be returned</param>
-        public T GetInputValue<T>(string fieldName, T fallback = default(T)) {
+
+    /// <summary> Return input value for a specified port. Returns fallback value if no ports are connected </summary>
+    /// <param name="fieldName">Field name of requested input port</param>
+    /// <param name="fallback">If no ports are connected, this value will be returned</param>
+    /// <param name="ctx">The current context. Can be null.</param>
+    public T GetInputValue<T>(string fieldName, T fallback = default(T), FlowContext ctx = null) {
             NodePort port = GetPort(fieldName);
             if (port != null && port.IsConnected) return port.GetInputValue<T>();
             else return fallback;
@@ -236,7 +239,8 @@ namespace XNode {
         /// <summary> Return all input values for a specified port. Returns fallback value if no ports are connected </summary>
         /// <param name="fieldName">Field name of requested input port</param>
         /// <param name="fallback">If no ports are connected, this value will be returned</param>
-        public T[] GetInputValues<T>(string fieldName, params T[] fallback) {
+        /// <param name="ctx">The current context. Can be null.</param>
+        public T[] GetInputValues<T>(string fieldName, FlowContext ctx = null, params T[] fallback) {
             NodePort port = GetPort(fieldName);
             if (port != null && port.IsConnected) return port.GetInputValues<T>();
             else return fallback;
@@ -244,7 +248,8 @@ namespace XNode {
 
         /// <summary> Returns a value based on requested port output. Should be overridden in all derived nodes with outputs. </summary>
         /// <param name="port">The requested port.</param>
-        public virtual object GetValue(NodePort port) {
+        /// <param name="ctx">The current context. Can be null.</param>
+        public virtual object GetValue(NodePort port, FlowContext ctx = null) {
             Debug.LogWarning("No GetValue(NodePort port) override defined for " + GetType());
             return null;
         }

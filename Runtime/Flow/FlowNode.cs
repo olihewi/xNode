@@ -8,7 +8,7 @@ namespace XNode.Flow
 {
     public abstract class BaseFlowNode : Node
     {
-        public virtual void OnFinishedPerfoming(FlowContext ctx)
+        public virtual void OnFinishedPerforming(FlowContext ctx)
         {
         }
 
@@ -23,7 +23,7 @@ namespace XNode.Flow
             ExecuteOutput(GetOutputPort(exitPortName), ctx);
         }
 
-        public override object GetValue(NodePort port)
+        public override object GetValue(NodePort port, FlowContext ctx)
         {
             if (port.IsConnected && port.Connection.node is BaseFlowNode flowNode) return flowNode;
             return null;
@@ -65,6 +65,11 @@ namespace XNode.Flow
         [Output(ShowBackingValue.Never, ConnectionType.Override, TypeConstraint.Inherited), SerializeField, HideInInspector]
         protected BaseFlowNode nextNode;
 
+        public override void OnFinishedPerforming(FlowContext ctx)
+        {
+            ExecuteOutput(nameof(nextNode), ctx);
+        }
+
         public override void OnCreateConnection(NodePort from, NodePort to)
         {
             base.OnCreateConnection(from, to);
@@ -84,6 +89,11 @@ namespace XNode.Flow
         protected BaseFlowNode previousNode;
         [Output(ShowBackingValue.Never, ConnectionType.Override, TypeConstraint.Inherited), SerializeField, HideInInspector]
         protected BaseFlowNode nextNode;
+
+        public override void OnFinishedPerforming(FlowContext ctx)
+        {
+            ExecuteOutput(nameof(nextNode), ctx);
+        }
 
         public override void OnCreateConnection(NodePort from, NodePort to)
         {
@@ -129,6 +139,11 @@ namespace XNode.Flow
         [Output(ShowBackingValue.Never, ConnectionType.Override, TypeConstraint.Inherited), SerializeField, HideInInspector]
         protected BaseFlowNode nextNode;
 
+        public override void OnFinishedPerforming(FlowContext ctx)
+        {
+            ExecuteOutput(nameof(nextNode), ctx);
+        }
+
         public override void OnCreateConnection(NodePort from, NodePort to)
         {
             base.OnCreateConnection(from, to);
@@ -148,6 +163,12 @@ namespace XNode.Flow
         protected BaseFlowNode previousNode;
         [Output(ShowBackingValue.Never, ConnectionType.Override, TypeConstraint.Inherited), SerializeField, HideInInspector]
         protected BaseFlowNode nextNode;
+
+        public override void OnFinishedPerforming(FlowContext ctx)
+        {
+            ExecuteOutput(nameof(nextNode), ctx);
+            base.OnFinishedPerforming(ctx);
+        }
 
         public override void OnCreateConnection(NodePort from, NodePort to)
         {

@@ -47,7 +47,7 @@ namespace XNode.Flow
                 {
                     OnStartExecution?.Invoke(ctx);
                     flowNode.Perform(ctx);
-                    flowNode.OnFinishedPerfoming(ctx);
+                    flowNode.OnFinishedPerforming(ctx);
                     OnEndExecution?.Invoke(ctx);
                     break;
                 }
@@ -68,6 +68,7 @@ namespace XNode.Flow
             {
                 var ctx = CancelledContexts[i].ctx;
                 if (ctx == null || ctx.Node == null) return;
+                if (ctx.Coroutine != null) StopCoroutine(ctx.Coroutine);
                 if (ctx.Node is FlowRoutineNode routineNode) routineNode.OnCancelled(ctx, CancelledContexts[i].cancellationFlags);
             }
             CancelledContexts.Clear();
