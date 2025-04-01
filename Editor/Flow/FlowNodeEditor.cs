@@ -3,7 +3,7 @@ using XNode.Flow;
 
 namespace XNodeEditor.Flow
 {
-    [CustomNodeEditor(typeof(FlowNode))]
+    [CustomNodeEditor(typeof(BaseFlowNode))]
     public class FlowNodeEditor : NodeEditor
     {
         public override void OnBodyGUI()
