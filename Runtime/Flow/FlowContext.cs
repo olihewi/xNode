@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using XNode.Variables;
 
 namespace XNode.Flow
 {
-    public class FlowContext
+    public class FlowContext : INodeVariableProvider
     {
-        public FlowGraphPlayer Player { get; set; }
+        public FlowGraphPlayer Player { get; private set; }
         public BaseFlowNode Node { get; private set; }
         public NodePort EntryPort { get; private set; }
         public NodePort PreviousExitPort { get; private set; }
@@ -18,9 +19,6 @@ namespace XNode.Flow
         /// Used for subgraph execution handling.
         /// </summary>
         public FlowContext ParentGraphContext { get; private set; }
-
-
-
         public BaseFlowNode PreviousNode => PreviousExitPort?.node as BaseFlowNode;
         public FlowGraph MasterGraph
         {
@@ -35,6 +33,8 @@ namespace XNode.Flow
             }
         }
 
+        public Dictionary<string, object> NodeVariables { get; set; }
+
         public FlowContext(BaseFlowNode node, NodePort exitPort, NodePort entryPort, FlowContext prevCtx)
         {
             Node = node;
@@ -44,6 +44,7 @@ namespace XNode.Flow
             {
                 Player = prevCtx.Player;
                 ParentGraphContext = prevCtx.ParentGraphContext;
+                if (prevCtx.NodeVariables != null) NodeVariables = new Dictionary<string, object>(prevCtx.NodeVariables);
             }
             else
             {
@@ -55,7 +56,14 @@ namespace XNode.Flow
 
         public static FlowContext EntryContext(BaseFlowNode node, FlowGraphPlayer player, FlowContext parentCtx = null)
         {
-            return new FlowContext(node, null, null, null) { Player = player, ParentGraphContext = parentCtx };
+            var ctx = new FlowContext(node, null, null, null)
+            {
+                Player = player,
+                ParentGraphContext = parentCtx,
+            };
+            if (parentCtx is { NodeVariables: { } })
+                ctx.NodeVariables = new Dictionary<string, object>(parentCtx.NodeVariables);
+            return ctx;
         }
 
         public static IEnumerable<FlowContext> FromExitPort(NodePort exitPort, FlowContext prevCtx)

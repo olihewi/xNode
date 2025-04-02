@@ -5,7 +5,7 @@ using UnityEngine;
 namespace XNode.Flow.Nodes
 {
     [CreateNodeMenu("Execution/Subgraph", -100)]
-    [NodeTint(1.0F,0.25F,0.25F), NodeWidth(256)]
+    [NodeTypeTint(typeof(BaseFlowNode)), NodeWidth(256)]
     public class SubgraphNode : FlowRoutineNode
     {
         public NodeGraph subgraph;

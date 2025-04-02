@@ -2,7 +2,7 @@
 
 namespace XNode.Flow.Nodes
 {
-    [NodeTint(1F,0.25F,0.25F)]
+    [NodeTypeTint(typeof(BaseFlowNode))]
     [CreateNodeMenu("Execution/Return", -101)]
     [DisallowMultipleNodes]
     public class ReturnNode : InFlowNode

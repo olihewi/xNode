@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using XNode.Variables;
 
 namespace XNode.Flow
 {
@@ -27,6 +28,26 @@ namespace XNode.Flow
         {
             if (port.IsConnected && port.Connection.node is BaseFlowNode flowNode) return flowNode;
             return null;
+        }
+
+        public void SetVariable(string key, object value, VariableScope scope, FlowContext ctx = null)
+        {
+            if (key == null) return;
+            switch (scope)
+            {
+            case VariableScope.Global:
+                GlobalVariables.SetVariable(key, value);
+                break;
+            case VariableScope.FlowGraphPlayer:
+                ctx.Player.SetVariable(key, value);
+                break;
+            case VariableScope.Graph:
+                if (graph is INodeVariableProvider variableGraph) variableGraph.SetVariable(key, value);
+                break;
+            case VariableScope.FlowContext:
+                ctx.SetVariable(key, value);
+                break;
+            }
         }
     }
 

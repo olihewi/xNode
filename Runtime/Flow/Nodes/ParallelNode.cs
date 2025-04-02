@@ -3,7 +3,7 @@
 namespace XNode.Flow.Nodes
 {
     [CreateNodeMenu("Execution/Parallel")]
-    [NodeWidth(100), NodeTint(0.5F, 0.1F, 0.1F)]
+    [NodeWidth(100), NodeTypeTint(typeof(BaseFlowNode), 0.5F)]
     public class ParallelNode : InFlowNode
     {
         [Output(ShowBackingValue.Never, ConnectionType.Multiple, TypeConstraint.Inherited), SerializeField, HideInInspector]

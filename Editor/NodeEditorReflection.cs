@@ -13,6 +13,7 @@ namespace XNodeEditor {
     /// <summary> Contains reflection-related extensions built for xNode </summary>
     public static class NodeEditorReflection {
         [NonSerialized] private static Dictionary<Type, Color> nodeTint;
+        [NonSerialized] private static Dictionary<Type, XNode.Node.NodeTypeTintAttribute> nodeTypeTint;
         [NonSerialized] private static Dictionary<Type, int> nodeWidth;
         [NonSerialized] private static Dictionary<Type, int> nodeHeight;
         [NonSerialized] private static Dictionary<Type, GUIContent> nodeHeader;
@@ -37,8 +38,14 @@ namespace XNodeEditor {
         public static bool TryGetAttributeTint(this Type nodeType, out Color tint) {
             if (nodeTint == null) {
                 CacheAttributes<Color, XNode.Node.NodeTintAttribute>(ref nodeTint, x => x.color);
+                CacheAttributes<XNode.Node.NodeTypeTintAttribute, XNode.Node.NodeTypeTintAttribute>(ref nodeTypeTint, x => x);
             }
-            return nodeTint.TryGetValue(nodeType, out tint);
+            if (nodeTint.TryGetValue(nodeType, out tint)) return true;
+            if (!nodeTypeTint.TryGetValue(nodeType, out var type)) return false;
+            var typeColor = NodeEditorPreferences.GetTypeColor(type.type);
+            tint = typeColor * type.multiplier;
+            tint.a = typeColor.a;
+            return true;
         }
 
         /// <summary> Get custom node widths defined with [NodeWidth(width)] </summary>

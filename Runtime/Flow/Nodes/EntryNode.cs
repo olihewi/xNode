@@ -1,6 +1,6 @@
 ﻿namespace XNode.Flow.Nodes
 {
-    [NodeTint(1F,0.25F,0.25F)]
+    [NodeTypeTint(typeof(BaseFlowNode))]
     [CreateNodeMenu("Execution/Entry", -102)]
     [DisallowMultipleNodes]
     public class EntryNode : OutFlowNode

@@ -1,7 +1,7 @@
 ﻿
 using XNode.Flow;
 
-namespace XNodeEditor.Flow
+namespace XNodeEditor.NodeEditors
 {
     [CustomNodeEditor(typeof(BaseFlowNode))]
     public class FlowNodeEditor : NodeEditor

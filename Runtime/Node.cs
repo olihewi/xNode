@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using XNode.Flow;
+using XNode.Variables;
 
 namespace XNode {
     /// <summary>
@@ -268,6 +269,68 @@ namespace XNode {
             foreach (NodePort port in Ports) port.ClearConnections();
         }
 
+    #region Variables
+
+        public object GetVariable(string key, VariableScopeFlags scopes = VariableScopeFlags.All,
+            FlowContext ctx = null)
+        {
+            if (key == null) return null;
+
+            if (scopes.HasFlag(VariableScopeFlags.FlowContext) && ctx != null && ctx.TryGetVariable(key, out var value))
+                return value;
+
+            if (scopes.HasFlag(VariableScopeFlags.Graph) && graph is INodeVariableProvider variableGraph &&
+                variableGraph.TryGetVariable(key, out value))
+                return value;
+
+            if (scopes.HasFlag(VariableScopeFlags.ParentGraphs) && ctx != null)
+            {
+                var parentCtx = ctx.ParentGraphContext;
+                while (parentCtx != null && parentCtx.Node != null)
+                {
+                    if (parentCtx.Node.graph is INodeVariableProvider parentVariableGraph &&
+                        parentVariableGraph.TryGetVariable(key, out value))
+                        return value;
+                    parentCtx = parentCtx.ParentGraphContext;
+                }
+            }
+
+            if (scopes.HasFlag(VariableScopeFlags.FlowGraphPlayer) && ctx != null && ctx.Player != null &&
+                ctx.Player.TryGetVariable(key, out value))
+                return value;
+
+            if (scopes.HasFlag(VariableScopeFlags.Global) && GlobalVariables.TryGetVariable(key, out value))
+                return value;
+
+            return null;
+        }
+
+        public TValue GetVariable<TValue>(string key, VariableScopeFlags scopes = VariableScopeFlags.All,
+            FlowContext ctx = null)
+        {
+            return (TValue)GetVariable(key, scopes, ctx);
+        }
+
+        public bool TryGetVariable(string key, out object value, VariableScopeFlags scopes = VariableScopeFlags.All, FlowContext ctx = null)
+        {
+            value = GetVariable(key, scopes, ctx);
+            return value != default;
+        }
+
+        public bool TryGetVariable<TValue>(string key, out TValue value,
+            VariableScopeFlags scopes = VariableScopeFlags.All, FlowContext ctx = null)
+        {
+            if (TryGetVariable(key, out var objValue, scopes, ctx) && objValue is TValue tValue)
+            {
+                value = tValue;
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
+    #endregion
+
 #region Attributes
         /// <summary> Mark a serializable field as an input port. You can access this through <see cref="GetInputPort(string)"/> </summary>
         [AttributeUsage(AttributeTargets.Field)]
@@ -380,6 +443,17 @@ namespace XNode {
             /// <param name="b"> Blue [0 .. 255] </param>
             public NodeTintAttribute(byte r, byte g, byte b) {
                 color = new Color32(r, g, b, byte.MaxValue);
+            }
+        }
+
+        [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+        public class NodeTypeTintAttribute : Attribute {
+            public Type type;
+            public float multiplier;
+            public NodeTypeTintAttribute(Type type, float multiplier = 1F)
+            {
+                this.type = type;
+                this.multiplier = multiplier;
             }
         }
 

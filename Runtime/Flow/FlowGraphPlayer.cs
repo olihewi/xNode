@@ -3,14 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using XNode.Variables;
 
 namespace XNode.Flow
 {
-    public class FlowGraphPlayer : MonoBehaviour
+    public class FlowGraphPlayer : MonoBehaviour, INodeVariableProvider
     {
-        public static readonly List<FlowGraphPlayer> LoadedPlayers = new(1);
-        public static readonly List<FlowGraphPlayer> ActivePlayers = new(1);
-
         public FlowGraph flowGraph;
         public bool playOnAwake = true;
 
@@ -22,21 +20,43 @@ namespace XNode.Flow
         public event ExecutionAction OnStartExecution, OnEndExecution;
 
 
+        private void Awake()
+        {
+        #if UNITY_EDITOR
+            if (!Application.isPlaying) return;
+        #endif
+            if (flowGraph == null) return;
+            if (playOnAwake && flowGraph.EntryNode != null)
+            {
+                Execute(FlowContext.EntryContext(flowGraph.EntryNode, this));
+            }
+        }
+
         private void Update()
         {
         #if UNITY_EDITOR
             if (!Application.isPlaying) return;
         #endif
-            PerformExecution();
             PerformCancellation();
         }
 
-        public void Execute(FlowContext ctx) => QueuedContexts.Add(ctx);
-        public void Execute(IEnumerable<FlowContext> ctxs) => QueuedContexts.AddRange(ctxs);
+        public void Execute(FlowContext ctx)
+        {
+            QueuedContexts.Add(ctx);
+            if (!_isExecuting) PerformExecution();
+        }
 
+        public void Execute(IEnumerable<FlowContext> ctxs)
+        {
+            QueuedContexts.AddRange(ctxs);
+            if (!_isExecuting) PerformExecution();
+        }
+
+        private bool _isExecuting = false;
         private void PerformExecution()
         {
             if (QueuedContexts.Count == 0) return;
+            _isExecuting = true;
             for (int i = 0; i < QueuedContexts.Count; i++)
             {
                 var ctx = QueuedContexts[i];
@@ -59,6 +79,15 @@ namespace XNode.Flow
                 }
             }
             QueuedContexts.Clear();
+            _isExecuting = false;
+        }
+        private IEnumerator ExecuteRoutine(FlowRoutineNode routineNode, FlowContext ctx)
+        {
+            FlowContexts.Add(ctx);
+            OnStartExecution?.Invoke(ctx);
+            yield return routineNode.Perform(ctx);
+            FlowContexts.Remove(ctx);
+            OnEndExecution?.Invoke(ctx);
         }
 
         private void PerformCancellation()
@@ -74,20 +103,12 @@ namespace XNode.Flow
             CancelledContexts.Clear();
         }
 
-        private IEnumerator ExecuteRoutine(FlowRoutineNode routineNode, FlowContext ctx)
-        {
-            FlowContexts.Add(ctx);
-            OnStartExecution?.Invoke(ctx);
-            yield return routineNode.Perform(ctx);
-            FlowContexts.Remove(ctx);
-            OnEndExecution?.Invoke(ctx);
-        }
-
         public void CancelExecution(FlowContext ctx,
             FlowCancellationFlags cancellationFlags = FlowCancellationFlags.None)
         {
             ctx.Cancel();
         }
 
+        public Dictionary<string, object> NodeVariables { get; set; }
     }
 }

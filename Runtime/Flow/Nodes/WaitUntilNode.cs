@@ -4,7 +4,7 @@ using UnityEngine;
 namespace XNode.Flow.Nodes
 {
     [CreateNodeMenu("Execution/Wait Until")]
-    [NodeWidth(160), NodeTint(0.5F, 0.1F, 0.1F)]
+    [NodeWidth(160), NodeTypeTint(typeof(BaseFlowNode), 0.5F)]
     public class WaitUntilNode : InOutFlowRoutineNode
     {
         [Input(ShowBackingValue.Unconnected, ConnectionType.Override, TypeConstraint.None)]
