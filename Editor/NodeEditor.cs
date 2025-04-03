@@ -90,13 +90,17 @@ namespace XNodeEditor {
             }
 #endif
 
-            // Iterate through dynamic ports and draw them in the order in which they are serialized
-            foreach (XNode.NodePort dynamicPort in target.DynamicPorts) {
-                if (NodeEditorGUILayout.IsDynamicPortListPort(dynamicPort)) continue;
-                NodeEditorGUILayout.PortField(dynamicPort);
+            if (ShowDynamicPorts)
+            {
+                // Iterate through dynamic ports and draw them in the order in which they are serialized
+                foreach (XNode.NodePort dynamicPort in target.DynamicPorts) {
+                    if (NodeEditorGUILayout.IsDynamicPortListPort(dynamicPort)) continue;
+                    NodeEditorGUILayout.PortField(dynamicPort);
+                }
+
+                serializedObject.ApplyModifiedProperties();
             }
 
-            serializedObject.ApplyModifiedProperties();
 
 #if ODIN_INSPECTOR
             // Call repaint so that the graph window elements respond properly to layout changes coming from Odin
@@ -198,5 +202,7 @@ namespace XNodeEditor {
                 return inspectedType;
             }
         }
+
+        public virtual bool ShowDynamicPorts => true;
     }
 }

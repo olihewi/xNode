@@ -196,7 +196,7 @@ namespace XNodeEditor {
             if (options == null) options = new GUILayoutOption[] { GUILayout.MinWidth(30) };
             Vector2 position = Vector3.zero;
             GUIContent content = label ?? new GUIContent(ObjectNames.NicifyVariableName(port.fieldName));
-            if (label == null && port.ValueType.IsAssignableFrom(typeof(FlowNode))) content = EditorGUIUtility.TrIconContent("Animation.Play", content.text);
+            if ((content.text == "Previous Node" || content.text == "Next Node") && port.ValueType.IsAssignableFrom(typeof(BaseFlowNode))) content = EditorGUIUtility.TrIconContent("Animation.Play", content.text);
 
             // If property is an input, display a regular property field and put a port handle on the left side
             if (port.direction == XNode.NodePort.IO.Input) {
