@@ -486,7 +486,13 @@ namespace XNode {
             public GUIContent content;
 
             public NodeHeaderAttribute(string name) => content = new GUIContent(name);
-            public NodeHeaderAttribute(string name, string iconPath) => content = new GUIContent(EditorGUIUtility.IconContent(iconPath)) {text = name};
+
+            public NodeHeaderAttribute(string name, string iconPath)
+            {
+            #if UNITY_EDITOR
+                content = new GUIContent(EditorGUIUtility.IconContent(iconPath)) {text = name};
+            #endif
+            }
         }
 #endregion
 
