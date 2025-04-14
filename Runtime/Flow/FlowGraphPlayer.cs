@@ -86,6 +86,7 @@ namespace XNode.Flow
             FlowContexts.Add(ctx);
             OnStartExecution?.Invoke(ctx);
             yield return routineNode.Perform(ctx);
+            routineNode.OnFinishedPerforming(ctx);
             FlowContexts.Remove(ctx);
             OnEndExecution?.Invoke(ctx);
         }
