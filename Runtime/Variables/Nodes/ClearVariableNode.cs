@@ -12,11 +12,9 @@ namespace XNode.Variables
 
         public override void Perform(FlowContext ctx)
         {
-            var keyPort = GetInputPort(nameof(Key));
-            if (keyPort.IsConnected)
+            var key = GetInputValue(nameof(Key), Key, ctx);
+            if (!string.IsNullOrEmpty(key))
             {
-                if (!keyPort.TryGetInputValue(out string key)) return;
-
                 if (Scopes.HasFlag(VariableScopeFlags.FlowContext))
                     ctx.ClearVariable(key);
 
