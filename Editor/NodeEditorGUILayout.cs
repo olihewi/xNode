@@ -166,6 +166,7 @@ namespace XNodeEditor {
                     rect.position = rect.position + new Vector2(rect.width, spacePadding);
                 }
 
+                if (rect.size.y == 0F) return;
                 rect.size = new Vector2(16, 16);
 
                 Color backgroundColor = NodeEditorWindow.current.graphEditor.GetPortBackgroundColor(port);
